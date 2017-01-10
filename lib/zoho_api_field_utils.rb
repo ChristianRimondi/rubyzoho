@@ -74,6 +74,17 @@ module ZohoApiFieldUtils
   def create_and_add_field_value_pair(field_name, module_name, n, record)
     k = ApiUtils.string_to_symbol(field_name)
     v = n.text == 'null' ? nil : n.text
+    if n.children.count > 0 && n.children.first.class == REXML::Element
+      v = []
+      n.each do |block|
+        if block.class == REXML::Element
+          v << block.inject({}) do |a, e|
+            a[ApiUtils.string_to_symbol(e.attributes['val'])] = e.text == 'null' ? nil : e.text
+            a
+          end
+        end
+      end
+    end
     r = record.merge({ k => v })
     r = r.merge({ :id => v }) if primary_key?(module_name, k)
     @@module_translation_fields[module_name] ||= {}
