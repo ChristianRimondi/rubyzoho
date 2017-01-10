@@ -7,7 +7,19 @@ module ZohoApiFieldUtils
   def add_field(row, field, value, module_name)
     r = (REXML::Element.new 'FL')
     r.attributes['val'] = adjust_tag_case(field.to_s, module_name)
-    r.add_text("#{value}")
+
+    if field == :product_details
+      value.each_with_index do |p, i|
+        prow = r.add_element 'product', {'no' => (i + 1).to_s}
+        p.each do |k, v|
+          el = prow.add_element 'FL', {'val' => ApiUtils.symbol_to_string(k)}
+          el.add_text("#{v}")
+        end
+      end
+    else
+      r.add_text("#{value}")
+    end
+
     row.elements << r
     row
   end
@@ -73,18 +85,18 @@ module ZohoApiFieldUtils
 
   def create_and_add_field_value_pair(field_name, module_name, n, record)
     k = ApiUtils.string_to_symbol(field_name)
-    v = n.text == 'null' ? nil : n.text
-    if n.children.count > 0 && n.children.first.class == REXML::Element
+
+    if k == :product_details
       v = []
-      n.each do |block|
-        if block.class == REXML::Element
-          v << block.inject({}) do |a, e|
-            a[ApiUtils.string_to_symbol(e.attributes['val'])] = e.text == 'null' ? nil : e.text
-            a
-          end
+      n.each do |p|
+        v << p.inject({}) do |a, el|
+          a[ApiUtils.string_to_symbol(el.attributes['val'])] = el.text == 'null' ? nil : el.text; a
         end
-      end
+      end if n.children.count > 0
+    else
+      v = n.text == 'null' ? nil : n.text
     end
+
     r = record.merge({ k => v })
     r = r.merge({ :id => v }) if primary_key?(module_name, k)
     @@module_translation_fields[module_name] ||= {}
@@ -144,3 +156,4 @@ module ZohoApiFieldUtils
   end
 
 end
+
