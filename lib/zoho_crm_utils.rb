@@ -9,7 +9,7 @@ module ZohoCrmUtils
     def create_accessor(klass, names)
       names.each do |name|
         n = name.class == Symbol ? name.to_s : name
-        n.gsub!(/[()]*/, '')
+        n = n.gsub(/[()]*/, '')
         raise(RuntimeError, "Bad field name: #{name}") unless method_name?(n)
         create_getter(klass, n)
         create_setter(klass, n)
@@ -48,7 +48,7 @@ module ZohoCrmUtils
   def create_accessor(klass, names)
     names.each do |name|
       n = name.class == Symbol ? name.to_s : name
-      n.gsub!(/[()]*/, '')
+      n = n.gsub(/[()]*/, '')
       raise(RuntimeError, "Bad field name: #{name}") unless self.class.method_name?(n)
       self.class.create_getter(klass, n)
       self.class.create_setter(klass, n)
