@@ -29,6 +29,11 @@ module CrudMethods
       RubyZoho.configuration.api.delete_record(self.module_name, id)
     end
 
+    def create(object_attribute_hash)
+      r = new(object_attribute_hash)
+      r.save
+    end
+
     def update(object_attribute_hash)
       raise(RuntimeError, 'No ID found', object_attribute_hash.to_s) if object_attribute_hash[:id].nil?
       id = object_attribute_hash[:id]
