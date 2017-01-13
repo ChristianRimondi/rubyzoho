@@ -30,8 +30,8 @@ module CrudMethods
     end
 
     def create(object_attribute_hash)
-      r = new(object_attribute_hash)
-      r.save
+      r = RubyZoho.configuration.api.add_record(self.module_name, object_attribute_hash)
+      new(object_attribute_hash.merge!(r))
     end
 
     def update(object_attribute_hash)
@@ -48,6 +48,18 @@ module CrudMethods
       object_attribute_hash.delete(:id)
       RubyZoho.configuration.api.update_related_records(self.module_name, id, object_attribute_hash)
       find(id)
+    end
+
+    def bulk_create(object_attribute_hash_array)
+      object_attribute_hash_array.each_slice(100) do |slice|
+        RubyZoho.configuration.api.bulk_insert(self.module_name, slice)
+      end
+    end
+
+    def bulk_update(object_attribute_hash_array)
+      object_attribute_hash_array.each_slice(100) do |slice|
+        RubyZoho.configuration.api.bulk_update(self.module_name, slice)
+      end
     end
 
     def import(arr)

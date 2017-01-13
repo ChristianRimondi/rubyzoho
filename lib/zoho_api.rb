@@ -64,6 +64,24 @@ module ZohoApi
       to_hash(x_r, module_name)[0]
     end
 
+    def bulk_update(module_name, records)
+      x = REXML::Document.new
+      element = x.add_element module_name
+
+      records.each_with_index do |fields_values_hash, index|
+        row = element.add_element 'row', {'no' => "#{index + 1}"}
+        fields_values_hash.each_pair { |k, v| add_field(row, k, v, module_name) }
+      end
+
+      r = self.class.post(create_url(module_name, 'updateRecords'),
+                          :query => {:newFormat => 1, :authtoken => @auth_token, :version => 4
+                                     :scope => 'crmapi', :xmlData => x, :wfTrigger => 'true'},
+                          :headers => {'Content-length' => '0'})
+      check_for_errors(r)
+      x_r = REXML::Document.new(r.body).elements.to_a('//recorddetail')
+      to_hash(x_r, module_name)[0]
+    end
+
     def attach_file(module_name, record_id, file_path, file_name)
       mime_type = (MIME::Types.type_for(file_path)[0] || MIME::Types['application/octet-stream'][0])
       url_path = create_url(module_name, "uploadFile?authtoken=#{@auth_token}&scope=crmapi&id=#{record_id}")
