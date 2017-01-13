@@ -103,12 +103,17 @@ module ZohoApi
 
       # updateRelatedRecords returns two codes one in the status tag and another in a success tag, we want the
       # code under the success tag in this case
-      code = REXML::XPath.first(x, '//success/code') || code = REXML::XPath.first(x, '//code')
+      code = REXML::XPath.first(x, '//success/code')
+      code ||= REXML::XPath.first(x, '//code')
 
       # 4422 code is no records returned, not really an error
       # TODO: find out what 5000 is
       # 4800 code is returned when building an association. i.e Adding a product to a lead. Also this doesn't return a message
-      raise(RuntimeError, "Zoho Error Code #{code.text}: #{REXML::XPath.first(x, '//message').text}.") unless code.nil? || ['4422', '5000', '4800'].index(code.text)
+      unless code.nil? || ['4422', '5000', '4800'].index(code.text)
+        message = REXML::XPath.first(x, '//message')
+        message ||= REXML::XPath.first(x, '//details')
+        raise(RuntimeError, "Zoho Error Code #{code.text}: #{message.text}.")
+      end
 
       return code.text unless code.nil?
       response.code
