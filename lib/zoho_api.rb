@@ -109,7 +109,8 @@ module ZohoApi
       # 4422 code is no records returned, not really an error
       # TODO: find out what 5000 is
       # 4800 code is returned when building an association. i.e Adding a product to a lead. Also this doesn't return a message
-      unless code.nil? || ['4422', '5000', '4800'].index(code.text)
+      # 2001 Bulk Update record updated successfully
+      unless code.nil? || ['4422', '5000', '4800', '2001'].index(code.text)
         message = REXML::XPath.first(x, '//message')
         message ||= REXML::XPath.first(x, '//details')
         raise(RuntimeError, "Zoho Error Code #{code.text}: #{message.text}.")
