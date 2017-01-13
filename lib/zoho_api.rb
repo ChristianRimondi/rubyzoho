@@ -74,7 +74,7 @@ module ZohoApi
       end
 
       r = self.class.post(create_url(module_name, 'updateRecords'),
-                          :query => {:newFormat => 1, :authtoken => @auth_token, :version => 4
+                          :query => {:newFormat => 1, :authtoken => @auth_token, :version => 4,
                                      :scope => 'crmapi', :xmlData => x, :wfTrigger => 'true'},
                           :headers => {'Content-length' => '0'})
       check_for_errors(r)
