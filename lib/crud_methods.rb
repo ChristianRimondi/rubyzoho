@@ -50,18 +50,6 @@ module CrudMethods
       find(id)
     end
 
-    def bulk_create(object_attribute_hash_array)
-      object_attribute_hash_array.each_slice(100) do |slice|
-        RubyZoho.configuration.api.bulk_insert(self.module_name, slice)
-      end
-    end
-
-    def bulk_update(object_attribute_hash_array)
-      object_attribute_hash_array.each_slice(100) do |slice|
-        RubyZoho.configuration.api.bulk_update(self.module_name, slice)
-      end
-    end
-
     def import(arr)
       arr.each_slice(100) do |slice|
         # convert each to field values hash

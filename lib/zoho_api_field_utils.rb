@@ -139,6 +139,34 @@ module ZohoApiFieldUtils
     r
   end
 
+  def to_hash_v4(xml_results, module_name)
+    r = []
+    xml_results.each do |row|
+      e = row.first
+
+      record = {}
+      record[:module_name] = module_name
+      record[:code] = e.elements['code'].text
+
+      details = e.elements['details']
+
+      if e.name == 'success'
+        record[:message] = ''
+
+        #e.elements.to_a.each do |n|
+        details.elements.to_a.each do |n|
+          record = hashed_field_value_pairs(module_name, n, record)
+        end
+      else # error
+        record[:message] = details.text
+      end
+
+      r << record unless record.nil?
+    end
+    return nil if r == []
+    r
+  end
+
   def to_hash_with_id(xml_results, module_name)
     to_hash(xml_results, module_name)
   end

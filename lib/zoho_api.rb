@@ -56,12 +56,12 @@ module ZohoApi
       end
 
       r = self.class.post(create_url(module_name, 'insertRecords'),
-                          :query => {:newFormat => 1, :authtoken => @auth_token,
+                          :query => {:newFormat => 1, :authtoken => @auth_token, :version => 4,
                                      :scope => 'crmapi', :xmlData => x, :wfTrigger => 'true'},
                           :headers => {'Content-length' => '0'})
-      check_for_errors(r)
-      x_r = REXML::Document.new(r.body).elements.to_a('//recorddetail')
-      to_hash(x_r, module_name)[0]
+      check_for_response_code(r)
+      x_r = REXML::Document.new(r.body).elements.to_a('//row')
+      to_hash_v4(x_r, module_name)
     end
 
     def bulk_update(module_name, records)
@@ -77,9 +77,9 @@ module ZohoApi
                           :query => {:newFormat => 1, :authtoken => @auth_token, :version => 4,
                                      :scope => 'crmapi', :xmlData => x, :wfTrigger => 'true'},
                           :headers => {'Content-length' => '0'})
-      check_for_errors(r)
-      x_r = REXML::Document.new(r.body).elements.to_a('//recorddetail')
-      to_hash(x_r, module_name)[0]
+      check_for_response_code(r)
+      x_r = REXML::Document.new(r.body).elements.to_a('//row')
+      to_hash_v4(x_r, module_name)
     end
 
     def attach_file(module_name, record_id, file_path, file_name)
@@ -97,8 +97,14 @@ module ZohoApi
       res.code
     end
 
-    def check_for_errors(response)
+    def check_for_response_code(response)
       raise(RuntimeError, "Web service call failed with #{response.code}") unless response.code == 200
+      response.code
+    end
+
+    def check_for_errors(response)
+      check_for_response_code(response)
+
       x = REXML::Document.new(response.body)
 
       # updateRelatedRecords returns two codes one in the status tag and another in a success tag, we want the
@@ -109,8 +115,7 @@ module ZohoApi
       # 4422 code is no records returned, not really an error
       # TODO: find out what 5000 is
       # 4800 code is returned when building an association. i.e Adding a product to a lead. Also this doesn't return a message
-      # 2001 Bulk Update record updated successfully
-      unless code.nil? || ['4422', '5000', '4800', '2001'].index(code.text)
+      unless code.nil? || ['4422', '5000', '4800'].index(code.text)
         message = REXML::XPath.first(x, '//message')
         message ||= REXML::XPath.first(x, '//details')
         raise(RuntimeError, "Zoho Error Code #{code.text}: #{message.text}.")
@@ -291,4 +296,5 @@ module ZohoApi
   end
 
 end
+
 
