@@ -26,7 +26,7 @@ module ZohoApiFieldUtils
 
   def adjust_tag_case(tag, module_name)
     return tag.capitalize if tag == 'id'
-    return tag.upcase if tag.downcase.end_with?('id')
+    return tag.upcase if tag.downcase.end_with?('id') && !tag.downcase.end_with?('_id')
     u_tags = %w[SEMODULE]
     return tag.upcase if u_tags.index(tag.upcase)
 
