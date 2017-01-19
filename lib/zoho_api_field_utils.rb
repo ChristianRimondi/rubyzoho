@@ -33,7 +33,7 @@ module ZohoApiFieldUtils
     if @@module_translation_fields[module_name].blank?
       tag
     else
-      @@module_translation_fields[module_name][tag] || tag
+      @@module_translation_fields[module_name][tag] || tag.downcase.end_with?('_id') && tag.capitalize.gsub(/(_id)$/, '_ID') || tag
     end
   end
 
@@ -112,17 +112,17 @@ module ZohoApiFieldUtils
   def extract_fields_from_response(mod_name, module_name, response)
     x = REXML::Document.new(response.body)
     REXML::XPath.each(x, "/#{module_name}/section/FL/@dv") do |field|
-      extract_field(field, mod_name)
+      extract_field(field, mod_name, module_name)
     end
     @@module_fields[mod_name] << ApiUtils.string_to_symbol(module_name.chop + 'id')
   end
 
-  def extract_field(f, mod_name)
+  def extract_field(f, mod_name, module_name)
     field = ApiUtils.string_to_symbol(f.to_s)
     @@module_fields[mod_name] << field if method_name?(field)
     @@module_fields[(mod_name.to_s + '_original_name').to_sym] << field
-    @@module_translation_fields[mod_name] ||= {}
-    @@module_translation_fields[mod_name][field.to_s] = f.to_s
+    @@module_translation_fields[module_name] ||= {}
+    @@module_translation_fields[module_name][field.to_s] = f.to_s
   end
 
   def to_hash(xml_results, module_name)
