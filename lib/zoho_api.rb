@@ -207,27 +207,36 @@ module ZohoApi
       to_hash(x, module_name)
     end
 
-    def update_related_records(parent_module, parent_record_id, related_module_fields)
+    def update_related_records(parent_module, parent_record_id, related_module, records)
       x = REXML::Document.new
-      leads = x.add_element related_module_fields[:related_module]
-      row = leads.add_element 'row', {'no' => '1'}
-      related_module_fields[:xml_data].each_pair { |k, v| add_field(row, k, v, parent_module) }
+      element = x.add_element related_module
 
-      r = self.class.post(create_url("#{parent_module}", 'updateRelatedRecords'),
+      records.each_with_index do |fields_values_hash, index|
+        row = element.add_element 'row', {'no' => "#{index + 1}"}
+        fields_values_hash.each_pair { |k, v| add_field(row, k, v, parent_module) }
+      end
+
+      r = self.class.post(create_url(parent_module, 'updateRelatedRecords'),
                           :query => {:newFormat => 1,
                                      :id => parent_record_id,
                                      :authtoken => @auth_token, :scope => 'crmapi',
-                                     :relatedModule => related_module_fields[:related_module],
+                                     :relatedModule => related_module,
                                      :xmlData => x, :wfTrigger => 'true'},
                           :headers => {'Content-length' => '0'})
 
       check_for_errors(r)
+
+      x_r = REXML::Document.new(r.body)
+      added_ids = x_r.elements.to_a('//added-ids').first
+      updated_ids = x_r.elements.to_a('//updated-ids').first
+      { added_ids: added_ids.nil? ? [] : added_ids.text[1..-2].split(', '),
+        updated_ids: updated_ids.nil? ? [] : updated_ids.text[1..-2].split(', ') }
     end
 
     def update_record(module_name, id, fields_values_hash)
       x = REXML::Document.new
-      contacts = x.add_element module_name
-      row = contacts.add_element 'row', {'no' => '1'}
+      element = x.add_element module_name
+      row = element.add_element 'row', {'no' => '1'}
       fields_values_hash.each_pair { |k, v| add_field(row, k, v, module_name) }
       r = self.class.post(create_url(module_name, 'updateRecords'),
                           :query => {:newFormat => 1, :authtoken => @auth_token,
